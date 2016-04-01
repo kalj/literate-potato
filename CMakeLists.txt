@@ -18,7 +18,7 @@ message("generated files: " ${generated_files})
 ADD_LIBRARY(strunt OBJECT  ${sources} )
 SET_PROPERTY(GLOBAL APPEND PROPERTY ALLOBJS
   "$<TARGET_OBJECTS:strunt>"
-  "${_generated_cuda_files}"
+  "${generated_files}"
   )
 
 #------------------------------------------------------------------------------
