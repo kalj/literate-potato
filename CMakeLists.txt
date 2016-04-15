@@ -6,24 +6,43 @@ FIND_PACKAGE(CUDA)
 # sub library
 #------------------------------------------------------------------------------
 
-CUDA_ADD_CUDA_INCLUDE_ONCE()
+SET(sources test.cu junk.cc)
 
-# Create custom commands and targets for each file.
-set(sources test.cu junk.cc)
-CUDA_WRAP_SRCS( strunt OBJ generated_files ${sources})
 
-message("generated files: " ${generated_files})
+FOREACH(_build dbg rel)
 
-# Add the library.
-ADD_LIBRARY(strunt OBJECT  ${sources} )
-SET_PROPERTY(GLOBAL APPEND PROPERTY ALLOBJS
-  "$<TARGET_OBJECTS:strunt>"
-  "${generated_files}"
-  )
+  CUDA_ADD_CUDA_INCLUDE_ONCE()
+
+  # Add the library.
+  ADD_LIBRARY( strunt.${_build} OBJECT  ${sources} )
+
+  # Create custom commands and targets for each file.
+  CUDA_WRAP_SRCS( finallib.${_build} OBJ generated_files ${sources} SHARED)
+
+  SET_PROPERTY(GLOBAL APPEND PROPERTY ALLOBJS_${_build}
+    "$<TARGET_OBJECTS:strunt.${_build}>"
+    "${generated_files}"
+    )
+ENDFOREACH()
 
 #------------------------------------------------------------------------------
 # main library
 #------------------------------------------------------------------------------
 
-GET_PROPERTY(_objects GLOBAL PROPERTY ALLOBJS)
-ADD_LIBRARY(finallib finallib.cc ${_objects})
+FOREACH(_build dbg rel)
+
+  GET_PROPERTY(_objects GLOBAL PROPERTY ALLOBJS_${_build})
+
+  FOREACH(_object ${_objects})
+    IF("${_object}" MATCHES "cu.o$")
+      SET_SOURCE_FILES_PROPERTIES("${_object}"
+        PROPERTIES
+        EXTERNAL_OBJECT TRUE
+        GENERATED TRUE
+        )
+    ENDIF()
+  ENDFOREACH()
+
+  ADD_LIBRARY(finallib.${_build} SHARED finallib.cc ${_objects})
+
+ENDFOREACH()
