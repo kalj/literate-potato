@@ -6,7 +6,7 @@ __global__ void kernel(float *x)
 
 void foo() {
 
-  float *x;
+  float *x = 0;
 
   kernel<<<1,1>>>(x);
 }
